@@ -1,0 +1,7 @@
+note_id,machine_id,timestamp,text,source,synthetic
+N-1,APU-01,2020-04-18T23:59:00,"Air leak failure report (severity: high stress), window 18 Apr 2020 00:00 to 18 Apr 2020 23:59. Source: UCI MetroPT-3 failure table (source record MPT3-N001).",maintenance,false
+N-2,APU-01,2020-05-30T06:00:00,"Air leak failure report (severity: high stress), window 29 May 2020 23:30 to 30 May 2020 06:00. Source: UCI MetroPT-3 failure table (source record MPT3-N002).",maintenance,false
+N-3,APU-01,2020-06-07T14:30:00,"Air leak failure report (severity: high stress), window 05 Jun 2020 10:00 to 07 Jun 2020 14:30. Source: UCI MetroPT-3 failure table (source record MPT3-N003).",maintenance,false
+N-4,APU-01,2020-06-08T16:00:00,"UCI failure-information table notes maintenance on 8 June at 16:00, following the reported 5–7 June air leak. (source record MPT3-N004)",maintenance,false
+N-5,APU-01,2020-07-15T19:00:00,"Air leak failure report (severity: high stress), window 15 Jul 2020 14:30 to 15 Jul 2020 19:00. Source: UCI MetroPT-3 failure table (source record MPT3-N005).",maintenance,false
+N-6,APU-01,2020-07-16T00:00:00,"UCI failure-information table notes maintenance on 16 July at 00:00, following the reported 15 July air leak. (source record MPT3-N006)",maintenance,false

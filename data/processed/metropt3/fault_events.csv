@@ -1,0 +1,5 @@
+event_id,machine_id,failure,severity,start,end,maintenance_report_as_written
+F1,APU-01,Air leak,High stress,2020-04-18T00:00:00,2020-04-18T23:59:00,
+F2,APU-01,Air leak,High stress,2020-05-29T23:30:00,2020-05-30T06:00:00,Maintenance on 30Apr at 12:00 (as written; before the failure - TO CHECK)
+F3,APU-01,Air leak,High stress,2020-06-05T10:00:00,2020-06-07T14:30:00,Maintenance on 8Jun at 16:00
+F4,APU-01,Air leak,High stress,2020-07-15T14:30:00,2020-07-15T19:00:00,Maintenance on 16Jul at 00:00
