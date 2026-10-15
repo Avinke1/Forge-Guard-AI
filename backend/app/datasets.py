@@ -7,6 +7,8 @@ do not contain is filled in HERE, in code, and is labelled PROPOSED:
   - valid_min / valid_max = physically impossible values -> SENSOR ERROR in validation, never an anomaly
   - kind for the synthetic fleet (all "analog")
   - the AI4I sensor config (evaluation only, not listed by the API)
+  - note-support keywords per sensor (STEP 2 decision 3)
+  - MetroPT-3 min_consecutive = 12 windows (1 h), tuned on F1-F3 only (Feb-Jun 2020); F4 is held out
 """
 
 import json
@@ -36,6 +38,8 @@ class SensorSpec:
     warn_low: float | None = None
     valid_min: float | None = None  # below -> SENSOR ERROR (set to empty)
     valid_max: float | None = None  # above -> SENSOR ERROR (set to empty)
+    # Words (matched at a word start, case-insensitive) that make a note SUPPORT an anomaly on this sensor.
+    keywords: tuple[str, ...] = ()
 
     def info(self) -> SensorInfo:
         return SensorInfo(
@@ -118,6 +122,15 @@ def _num_or_none(value) -> float | None:
 # PROPOSED valid ranges: these quantities cannot be negative. Temperature has no lower bound.
 _SYNTHETIC_VALID_MIN = {"vibration_mm_s": 0.0, "pressure_bar": 0.0, "sound_db": 0.0, "rpm": 0.0}
 
+# PROPOSED note-support keywords (alarm / noise / maintenance on the same symptom).
+_SYNTHETIC_KEYWORDS = {
+    "vibration_mm_s": ("vibration", "bearing", "noise", "loud"),
+    "temperature_c": ("temperature", "overheat", "hot", "oil", "lube", "cooling"),
+    "pressure_bar": ("pressure", "relief valve"),
+    "sound_db": ("sound", "noise", "loud", "bearing"),
+    "rpm": ("rpm", "speed", "coupling", "belt"),
+}
+
 
 def _synthetic_fleet() -> DatasetConfig:
     cfg = _load_json(CONFIG_DIR / "sensors.json")
@@ -130,6 +143,7 @@ def _synthetic_fleet() -> DatasetConfig:
             warn_high=_num_or_none(s.get("warn_high")),
             warn_low=_num_or_none(s.get("warn_low")),
             valid_min=_SYNTHETIC_VALID_MIN.get(name),
+            keywords=_SYNTHETIC_KEYWORDS.get(name, ()),
         )
         for name, s in cfg["sensors"].items()
     }
@@ -187,6 +201,9 @@ _METROPT_VALID = {
     "raw_rows": (0.0, None),
 }
 
+# Every MetroPT-3 note is an air-leak failure report or the maintenance that followed one.
+_METROPT_KEYWORDS = ("air leak", "leak")
+
 
 def _metropt3() -> DatasetConfig:
     cfg = _load_json(CONFIG_DIR / "metropt3_sensors.json")
@@ -203,6 +220,7 @@ def _metropt3() -> DatasetConfig:
             warn_low=_num_or_none(s.get("warn_low")),
             valid_min=vmin,
             valid_max=vmax,
+            keywords=() if s.get("kind") == "quality" else _METROPT_KEYWORDS,
         )
     base = PROCESSED_DIR / "metropt3"
     return DatasetConfig(
@@ -221,6 +239,7 @@ def _metropt3() -> DatasetConfig:
         expected_interval=timedelta(minutes=5),
         min_raw_rows=10,
         zscore_window=288,
+        min_consecutive=12,
         full_readings_path=base / "readings_full_5min.csv",
         extra_paths={"fault_events": base / "fault_events.csv"},  # ANSWER KEY - evaluation only
     )
