@@ -1,0 +1,12 @@
+# Python 3.11 (see .python-version). Versions = what was actually installed and tested (uv pip freeze).
+fastapi==0.143.2
+uvicorn[standard]==0.54.0
+pandas==3.0.6
+numpy==2.4.6
+pydantic==2.14.1
+pydantic-settings==2.16.0
+python-multipart==0.0.32
+openai==3.31.0
+python-dotenv==1.2.4
+httpx==0.28.1
+pytest==9.1.1

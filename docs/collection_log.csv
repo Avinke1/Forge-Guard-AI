@@ -1,0 +1,3 @@
+file,source_url,licence,download_date,size_bytes,sha256,status
+data/raw/ai4i/ai4i2020.csv,https://archive.ics.uci.edu/dataset/601/ai4i+2020+predictive+maintenance+dataset,CC BY 4.0,2026-10-14,522048,dc6630cd9b1f0f853922fad78a1b6436570d3f1ec863f1dd5c4340ac56bc8a8e,verified
+MetroPT3(AirCompressor).csv,https://archive.ics.uci.edu/dataset/791/metropt+3+dataset,CC BY 4.0,,218300507,db30ccb4ea402e3c8bf2c99db06e288d4f2a772f6928f9dbe26a920d69793e24,team-lead-managed; download date not recorded

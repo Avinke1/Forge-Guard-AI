@@ -1,0 +1,21 @@
+# raw data and archives - never in GitHub
+data/raw/
+*.zip
+
+# secrets
+.env
+
+# Python
+__pycache__/
+.venv/
+venv/
+*.pyc
+.pytest_cache/
+
+# frontend
+node_modules/
+dist/
+
+# system files
+.DS_Store
+Thumbs.db

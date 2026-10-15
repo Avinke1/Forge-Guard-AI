@@ -1,0 +1,7 @@
+machine_id,machine_type,synthetic
+FP-01,forging press,true
+FP-02,forging press,true
+HP-01,hydraulic pump,true
+HP-02,hydraulic pump,true
+DS-01,drive shaft,true
+DS-02,drive shaft,true

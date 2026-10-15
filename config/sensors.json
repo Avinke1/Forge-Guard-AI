@@ -1,0 +1,12 @@
+{
+  "dataset": "synthetic_fleet",
+  "limits_type": "illustrative project thresholds, not calibrated or manufacturer-certified",
+  "transient_rule": "an anomaly counts only if it lasts at least 2 consecutive readings",
+  "sensors": {
+    "vibration_mm_s": {"label": "Vibration", "unit": "mm/s", "warn_high": 6.5, "warn_low": null},
+    "temperature_c": {"label": "Temperature", "unit": "\u00b0C", "warn_high": 90, "warn_low": null},
+    "pressure_bar": {"label": "Pressure", "unit": "bar", "warn_high": 225, "warn_low": 120},
+    "sound_db": {"label": "Sound level", "unit": "dB", "warn_high": 85, "warn_low": null},
+    "rpm": {"label": "Rotational speed", "unit": "rpm", "warn_high": 1260, "warn_low": 1140}
+  }
+}
