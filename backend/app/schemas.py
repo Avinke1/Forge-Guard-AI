@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 Priority = Literal["HIGH", "MEDIUM", "LOW", "OK"]
 DetectionMethod = Literal["limit", "zscore"]
 NoteSource = Literal["maintenance", "error_log", "inspection"]
-ProviderName = Literal["amd_token_factory", "amd_vllm", "gemini", "mock", "saved"]
+ProviderName = Literal["amd_token_factory", "gemini", "mock", "saved"]
 SensorKind = Literal["analog", "derived", "quality"]
 NoteRelation = Literal["before", "during", "after"]
 ExplanationSection = Literal["findings", "possible_causes", "recommended_checks"]
