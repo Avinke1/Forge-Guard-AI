@@ -1,6 +1,11 @@
-from datetime import datetime, timedelta
+import os
 
-import pandas as pd
+# Tests never call a real AI endpoint, whatever backend/.env says (set before any settings are read).
+os.environ["LLM_PROVIDER"] = "mock"
+
+from datetime import datetime, timedelta  # noqa: E402
+
+import pandas as pd  # noqa: E402
 import pytest
 
 from backend.app.datasets import get_dataset, load_demo_frames

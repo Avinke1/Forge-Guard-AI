@@ -9,6 +9,7 @@ frozen contract keeps working. They were agreed in STEP 1:
   - Anomaly.linked_notes         note_id + relation ("before" | "during" | "after") from section 5.3
   - MachineCase.context          data-quality warnings and ignored one-off spikes, with nearby notes,
                                  shown on the machine page as context - NOT evidence
+  - Provenance.provider          also "amd_token_factory" (STEP 3: Member 2's AMD Token Factory client)
 Timestamps are naive ISO 8601 wall-clock times (e.g. 2026-10-14T08:00:00), never with a time zone.
 """
 
@@ -20,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 Priority = Literal["HIGH", "MEDIUM", "LOW", "OK"]
 DetectionMethod = Literal["limit", "zscore"]
 NoteSource = Literal["maintenance", "error_log", "inspection"]
-ProviderName = Literal["amd_vllm", "gemini", "mock", "saved"]
+ProviderName = Literal["amd_token_factory", "amd_vllm", "gemini", "mock", "saved"]
 SensorKind = Literal["analog", "derived", "quality"]
 NoteRelation = Literal["before", "during", "after"]
 ExplanationSection = Literal["findings", "possible_causes", "recommended_checks"]
