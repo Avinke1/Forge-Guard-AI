@@ -10,7 +10,7 @@ import pytest
 
 from backend.app import llm_client, prompts, reports
 from backend.app.llm_client import HTTPResponse, LLMClient, LLMConfig
-from backend.app.main import ai_view
+from backend.app.pipeline import ai_view
 from backend.app.schemas import InspectionReport
 from backend.tests.conftest import case
 

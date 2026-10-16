@@ -161,3 +161,19 @@ def run_analysis(readings_df: pd.DataFrame, notes_df: pd.DataFrame | None, datas
 def run_demo(dataset_id: str) -> AnalysisResult:
     readings, notes = load_demo_frames(dataset_id)
     return run_analysis(readings, notes, dataset_id)
+
+
+def ai_view(result: AnalysisResult) -> AnalysisResult:
+    """The run as the AI sees it: each case keeps only the notes LINKED to its anomalies.
+
+    MachineCase.notes holds every note of the machine (unlinked ones are background for the UI).
+    reports.py treats case.notes as evidence, so unlinked notes must not reach it: they would be sent
+    to the AI as citable evidence and listed in the rule-based fallback summary.
+    RULE: everything that calls reports.explain_machine or reports.save_report passes ai_view(result) -
+    main.py and every script (e.g. scripts/save_demo_reports.py). The API response itself keeps all notes.
+    """
+    cases = []
+    for case in result.cases:
+        linked = {link.note_id for a in case.anomalies for link in a.linked_notes}
+        cases.append(case.model_copy(update={"notes": [n for n in case.notes if n.note_id in linked]}))
+    return result.model_copy(update={"cases": cases})
