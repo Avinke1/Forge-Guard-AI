@@ -47,6 +47,8 @@ class Settings(BaseSettings):
 
     # API
     frontend_origins: str = "http://localhost:5173"
+    # Optional regex for extra origins, e.g. Vercel preview URLs: https://forgeguard-[a-z0-9-]+\.vercel\.app
+    frontend_origin_regex: str = ""
     max_upload_mb: int = 10
     max_runs: int = 20
 

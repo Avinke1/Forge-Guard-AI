@@ -28,6 +28,7 @@ app = FastAPI(title="ForgeGuard AI API", version=settings.app_version)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origin_list,
+    allow_origin_regex=settings.frontend_origin_regex or None,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )

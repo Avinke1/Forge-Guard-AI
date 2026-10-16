@@ -1,0 +1,25 @@
+# Render Blueprint for the ForgeGuard AI backend (free web service: 0.1 CPU, 512 MB, sleeps after 15 min idle).
+# Python version comes from .python-version (3.11). Secrets are entered in the Render dashboard, never here.
+services:
+  - type: web
+    name: forgeguard-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: LLM_PROVIDER
+        value: mock
+      - key: LLM_TIMEOUT_S
+        value: "60"
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: FRONTEND_ORIGIN_REGEX
+        sync: false
+      - key: AMD_TOKEN_FACTORY_API_KEY
+        sync: false
+      - key: AMD_TOKEN_FACTORY_BASE_URL
+        sync: false
+      - key: AMD_TOKEN_FACTORY_MODEL
+        sync: false
