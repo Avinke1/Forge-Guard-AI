@@ -23,12 +23,13 @@ import pandas as pd  # noqa: E402
 
 from backend.app.datasets import get_dataset, load_demo_frames, read_csv_as_text  # noqa: E402
 from backend.app.pipeline import analyze  # noqa: E402
+from backend.app.reports import DEMO_REPORTS_DIR as SAVED_REPORTS_DIR  # noqa: E402
+from backend.app.reports import SAVED_FORMAT  # noqa: E402
 from backend.app.schemas import InspectionReport  # noqa: E402
 
 EVENT_LEAD = timedelta(hours=2)  # an anomaly up to 2 h before a failure window counts as detecting it
 EPISODE_MERGE_GAP = timedelta(hours=1)  # anomalies (any sensor) closer than this form one alert episode
 HOLDOUT_START = datetime(2020, 7, 1)  # thresholds were tuned on Feb-Jun 2020 (F1-F3); F4 is held out
-SAVED_REPORTS_DIR = REPO / "data" / "demo_reports"
 
 
 def _ts(value) -> str:
@@ -219,15 +220,19 @@ def ai4i_evaluation() -> dict:
 
 
 def ai_reports() -> dict:
+    """Saved real AMD reports written by reports.save_report (format "forgeguard-saved-report-v1")."""
     files = sorted(SAVED_REPORTS_DIR.glob("*/*.json")) if SAVED_REPORTS_DIR.is_dir() else []
     reports, invalid = [], []
     for path in files:
         try:
-            reports.append((path, InspectionReport.model_validate(json.loads(path.read_text(encoding="utf-8")))))
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and data.get("format") == SAVED_FORMAT:
+                data = data.get("report")
+            reports.append((path, InspectionReport.model_validate(data)))
         except (ValueError, OSError):
             invalid.append(path)
     with_ai = [(p, r) for p, r in reports if r.explanation is not None and r.provenance is not None]
-    amd = [(p, r) for p, r in with_ai if r.provenance.provider not in ("mock", "saved")]
+    amd = [(p, r) for p, r in with_ai if r.provenance.provider == "amd_token_factory"]
     grounding = [r.grounding_rate for _, r in amd if r.grounding_rate is not None]
     latency = [r.provenance.latency_ms for _, r in amd if r.provenance.latency_ms is not None]
     return {

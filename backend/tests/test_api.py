@@ -5,8 +5,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.app import explain, prompts
-from backend.app.main import app
+from backend.app import llm_client, prompts, reports
+from backend.app.main import ai_view, app
 from backend.app.settings import REPO_ROOT
 
 SYN_READINGS = REPO_ROOT / "data/processed/synthetic_fleet/readings.csv"
@@ -15,7 +15,8 @@ SYN_NOTES = REPO_ROOT / "data/processed/synthetic_fleet/notes.csv"
 
 @pytest.fixture(scope="module")
 def client():
-    explain.clear_caches()
+    reports.clear_cache()
+    llm_client.set_client(None)  # rebuilt from the environment: LLM_PROVIDER=mock (conftest)
     return TestClient(app)
 
 
@@ -196,10 +197,11 @@ def test_label_and_answer_key_not_in_prompt(client, syn, met):
     from backend.app.store import runs
 
     for body in (syn, met):
-        result = runs.get(body["run_id"]).result
-        for case in result.cases:
-            llm_case = explain.build_llm_case(result, case)
-            text = json.dumps(llm_case) + json.dumps(prompts.build_messages(llm_case))
+        view = ai_view(runs.get(body["run_id"]).result)
+        for case in view.cases:
+            payload = prompts.build_case_payload(case, readings=view.readings, sensors=view.sensors,
+                                                 dataset=view.dataset)
+            text = json.dumps(payload) + json.dumps(prompts.build_messages(payload))
             assert '"label"' not in text
             assert "fault_events" not in text and "event_id" not in text
 

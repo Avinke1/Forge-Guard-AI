@@ -1,7 +1,7 @@
 # ForgeGuard AI - Backend API (for Members 3 + 6)
 
 Contract: CLAUDE.md section 6 (FROZEN). Pydantic source of truth: `backend/app/schemas.py`.
-All examples below are REAL responses from the backend (STEP 3, `LLM_PROVIDER=mock`).
+All examples below are REAL responses from the backend (`LLM_PROVIDER=mock`, final AI files).
 
 ## Run it locally
 
@@ -23,8 +23,8 @@ CORS allows `http://localhost:5173` and the origins in `FRONTEND_ORIGINS` (comma
 | GET | `/api/datasets` | `DatasetInfo[]` | `synthetic_fleet`, `metropt3` |
 | POST | `/api/analyze` | `AnalysisResult` | multipart: `readings` (.csv, required), `notes` (.csv, optional), `dataset_hint` (optional) |
 | POST | `/api/analyze/demo/{dataset_id}` | `AnalysisResult` | `synthetic_fleet` or `metropt3`; about 0.2 s |
-| POST | `/api/runs/{run_id}/explain/{machine_id}` | `InspectionReport` | on demand, one machine; can take up to 60 s with the real AI |
-| GET | `/api/llm/status` | `LLMStatus` | real health check, cached 30 s |
+| POST | `/api/runs/{run_id}/explain/{machine_id}` | `InspectionReport` | on demand, one machine; real AI about 25 s (12-36 s) - client timeout >= 90 s |
+| GET | `/api/llm/status` | `LLMStatus` | real health check (model list, no AI tokens used), cached 30 s |
 
 ## Errors
 
@@ -97,56 +97,65 @@ Show `error` text to the user as-is; it is written in plain English.
 | `Anomaly.machine_id` | machine of the anomaly |
 | `Anomaly.linked_notes` | `[{note_id, relation: before/during/after}]` |
 | `MachineCase.context` | data-quality warnings and ignored one-off spikes, with nearby notes. Show on the machine page as context, NOT as evidence. `kind`: `empty_cell`, `unreadable_value`, `sensor_error`, `gap`, `low_raw_rows`, `transient_ignored` |
-| `Provenance.provider` | can also be `amd_token_factory` |
+| `Provenance.provider` | `amd_token_factory` (real AI on AMD), `mock`, `saved` (stored real AMD report), `gemini` (optional backup, never AMD) |
 
 ## InspectionReport (explain)
 
-Success (mock shown; with the real AI only `provenance` differs):
+**Timing:** a real AMD explanation takes about **25 s (seen 12-36 s)**. Show a loading state and use a client
+timeout of **at least 90 s**. Explain one machine at a time: the team shares a $1/day AMD limit.
+
+Success (real mock output, lists shortened; with the real AI only the text and `provenance` differ):
 
 ```json
 {
   "machine_id": "HP-01",
   "explanation": {
     "machine_id": "HP-01",
-    "summary": "MOCK - not AI output. HP-01 has 3 anomaly record(s); priority HIGH.",
-    "findings": [{"statement": "Vibration 8 mm/s above the 6.5 mm/s limit for 15 h 45 min (64 readings).", "evidence": ["A-5", "R860"]}],
-    "possible_causes": [{"cause": "MOCK: possibly related to note N-13 (before the anomaly).", "evidence": ["A-3", "N-13"]}],
-    "recommended_checks": [{"action": "Inspect bearings mounting alignment and rotating parts; confirm with repeat readings (general guidance, not manufacturer-verified)",
-                            "reason": "MOCK: Vibration high", "evidence": ["A-3"]}],
-    "missing_information": ["MOCK mode: no AI model was called."],
-    "uncertainty": "MOCK output for interface testing only; it is not an AI explanation."
+    "summary": "MOCK - not AI output. HP-01: 3 unusual reading pattern(s); strongest: Vibration 8 mm/s above the 6.5 mm/s limit for 15 h 45 min (64 readings)..",
+    "findings": [{"statement": "MOCK: Vibration - Vibration 8 mm/s above the 6.5 mm/s limit for 15 h 45 min (64 readings).", "evidence": ["A-5", "R801"]}],
+    "possible_causes": [{"cause": "MOCK: possibly related to note N-13 (before A-5).", "evidence": ["A-5", "N-13"]}],
+    "recommended_checks": [{"action": "MOCK: Inspect bearings mounting alignment and rotating parts; confirm with repeat readings",
+                            "reason": "(general guidance, not manufacturer-verified)", "evidence": ["A-5"]}],
+    "missing_information": ["MOCK output - set LLM_PROVIDER=amd_token_factory for a real AI explanation."],
+    "uncertainty": "MOCK output - not written by an AI model."
   },
   "unsupported": [],
   "grounding_rate": 1.0,
-  "provenance": {"provider": "mock", "model": "mock", "hardware_label": "none - MOCK mode, no AI model was called",
-                 "latency_ms": 0.2, "created_at": "2026-10-16T04:41:56.075610Z", "cached": false},
+  "provenance": {"provider": "mock", "model": "mock", "hardware_label": "none - MOCK output, not AI",
+                 "latency_ms": 0.0, "created_at": "2026-10-16T13:46:54Z", "cached": false},
   "error": null,
   "fallback_summary": null
 }
 ```
 
-No AI explanation (no anomalies, AI unavailable, invalid AI output, ...):
+With the real AI, `provenance` looks like `{"provider": "amd_token_factory", "model": "self-dploy/DeepSeek-V4-Flash",
+"hardware_label": "AMD GPUs - AMD Token Factory (Radeon Cloud)", "latency_ms": 26309, ...}` - show `model` exactly as returned.
+
+No AI explanation (no anomalies, AI unavailable, invalid AI output, daily limit used up, ...):
 
 ```json
 {
   "machine_id": "FP-01", "explanation": null, "unsupported": [], "grounding_rate": null, "provenance": null,
-  "error": "No anomalies were detected for this machine, so there is nothing for the AI to explain.",
-  "fallback_summary": "Rule-based summary (no AI): FP-01 - priority OK (score 0). No anomalies were detected for this machine."
+  "error": "No unusual readings for this machine, so no AI explanation was requested.",
+  "fallback_summary": "Rule-based summary (no AI): FP-01 - priority OK (score 0.00). No unusual readings were found."
 }
 ```
+
+`GET /api/llm/status` (mock): `{"provider": "mock", "model": "mock", "hardware_label": "none - MOCK output, not AI", "reachable": true, "last_latency_ms": 0.0, "error": null}`
 
 ## UI rules (from CLAUDE.md - please follow)
 
 - `explanation == null` -> show `error` + `fallback_summary`. Never show an AI box then.
 - Badge from `provenance` ONLY (never hard-code):
   - `mock` -> **"MOCK - not AI output"**
-  - `saved` -> **"saved"** (a stored real AMD report, shown when the AMD endpoint is off)
+  - `saved` -> **"saved"** (a stored real AMD report, shown when the AMD endpoint is off or the daily limit is used up)
   - `amd_token_factory` -> show `model` + `hardware_label` exactly as returned
+  - `gemini` -> show `model` + `hardware_label` (it says "not AMD") - never an AMD badge
   - `cached: true` -> optional "cached" tag
 - `unsupported` = `[{section, index}]` -> mark that item (e.g. `findings[1]`) as "not supported by evidence".
 - `grounding_rate` = supported items / all items; show as a percentage.
 - Evidence chips: `A-n` -> anomaly, `R123` -> reading row, `N-n` -> note. Click to highlight.
 - `dataset.synthetic == true` -> show a "SYNTHETIC data" banner; always show `dataset.attribution`.
-- `recommended_checks` from the guidance table end with "(general guidance, not manufacturer-verified)" - keep that text.
+- Checks based on the guidance table say "(general guidance, not manufacturer-verified)" - keep that text.
 - Never use the words: autonomous, predictive, prediction, guaranteed. A technician decides.
 - `/api/llm/status` -> header indicator (`reachable`, `provider`, `model`, `hardware_label`).

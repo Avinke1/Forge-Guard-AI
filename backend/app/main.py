@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from backend.app import explain
+from backend.app import reports
 from backend.app.datasets import listed_datasets, load_demo_frames
 from backend.app.pipeline import AnalysisError, analyze
 from backend.app.schemas import AnalysisResult, DatasetInfo, HealthResponse, InspectionReport, LLMStatus
@@ -121,20 +121,36 @@ def analyze_demo(dataset_id: str) -> AnalysisResult:
     return _run(readings_raw, notes_raw, dataset_id, True)
 
 
+def ai_view(result: AnalysisResult) -> AnalysisResult:
+    """The run as the AI sees it: each case keeps only the notes LINKED to its anomalies.
+
+    MachineCase.notes holds every note of the machine (unlinked ones are background for the UI).
+    reports.py treats case.notes as evidence, so unlinked notes must not reach it: they would be sent
+    to the AI as citable evidence and listed in the rule-based fallback summary.
+    """
+    cases = []
+    for case in result.cases:
+        linked = {link.note_id for a in case.anomalies for link in a.linked_notes}
+        cases.append(case.model_copy(update={"notes": [n for n in case.notes if n.note_id in linked]}))
+    return result.model_copy(update={"cases": cases})
+
+
 @api.post("/runs/{run_id}/explain/{machine_id}", response_model=InspectionReport)
 def explain_machine(run_id: str, machine_id: str) -> InspectionReport:
+    """Normal def (not async): the AI call can take about 25 s; FastAPI runs it in a worker thread."""
     run = runs.get(run_id)
     if run is None:
         raise ApiError(404, "Run not found. It may have expired - please run the analysis again.")
     try:
-        return explain.explain_machine(run, machine_id)
+        report = reports.explain_machine(ai_view(run.result), machine_id)
     except KeyError:
         raise ApiError(404, f"Machine '{machine_id}' is not in this run.") from None
+    return InspectionReport.model_validate(report)
 
 
 @api.get("/llm/status", response_model=LLMStatus)
 def llm_status() -> LLMStatus:
-    return explain.llm_status()
+    return LLMStatus.model_validate(reports.llm_status())
 
 
 app.include_router(api)

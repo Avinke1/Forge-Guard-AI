@@ -18,12 +18,15 @@ Render free web service (checked 16 Oct 2026 in the Render docs): HTTPS included
 |---|---|
 | `FRONTEND_ORIGINS` | `http://localhost:5173,https://<our-app>.vercel.app` (exact Vercel production URL, no trailing slash) |
 | `FRONTEND_ORIGIN_REGEX` | optional, for Vercel preview URLs, e.g. `https://<project>-[a-z0-9-]+\.vercel\.app`; leave empty if unsure |
-| `AMD_TOKEN_FACTORY_API_KEY` | Member 2's key (leave empty until the real smoke test passed) |
-| `AMD_TOKEN_FACTORY_BASE_URL` | exactly as the AMD Token Factory dashboard shows it (HTTPS) |
-| `AMD_TOKEN_FACTORY_MODEL` | exactly as the dashboard shows it |
+| `LLM_API_KEY` | the team's AMD Token Factory key (`rc-...`) - typed into the Render dashboard only |
 
-`LLM_PROVIDER` starts as `mock`. Switch it to `amd_token_factory` in the Render dashboard (Environment)
-only after Member 2's real smoke test passed; Render redeploys automatically.
+Already set by `render.yaml` (change in the dashboard if needed): `LLM_PROVIDER=mock`,
+`LLM_BASE_URL=https://developer.amd.com.cn/radeon/api/v1`, `LLM_MODEL=DeepSeek-V4-Flash`,
+`LLM_FALLBACK_MODEL=MiMo-V2.6-Flash`, `LLM_HARDWARE_LABEL`, `LLM_TIMEOUT_S=60`, `LLM_MAX_CASES=5`.
+
+`LLM_PROVIDER` starts as `mock`. Switch it to `amd_token_factory` in the Render dashboard (Environment) when
+the real AI should run; Render redeploys automatically. The team shares a **$1/day** AMD cap and 20 requests/min:
+one explanation costs about 25 s and one or two requests, so keep live AI for the demo and judging.
 
 4. After the deploy: open `https://<service>.onrender.com/api/health` -> `{"status":"ok","version":"0.1.0"}`.
 5. Give the URL to Members 3 + 6: Vercel env var for the API base URL = `https://<service>.onrender.com`.
@@ -37,6 +40,8 @@ only after Member 2's real smoke test passed; Render redeploys automatically.
 
 ## Rollback / safe mode
 
-Set `LLM_PROVIDER=mock` in the Render dashboard -> the app works without AMD; every AI box shows
-"MOCK - not AI output". Saved real AMD reports (`data/demo_reports/`) are only used for the demo datasets
-when the provider is `amd_token_factory` and the endpoint is down.
+- `LLM_PROVIDER=saved` -> no live AI at all: the saved real AMD reports (`data/demo_reports/`, made by
+  `scripts/save_demo_reports.py`) are shown with the badge "saved"; other machines get the rule-based summary.
+- `LLM_PROVIDER=mock` -> the app works without AMD; every AI box shows "MOCK - not AI output".
+- With `amd_token_factory`, a saved report is also served automatically when AMD is rate-limited, the daily cap
+  is used up or the service is down (only if the machine's anomalies still match the saved report).

@@ -1,5 +1,5 @@
 # Render Blueprint for the ForgeGuard AI backend (free web service: 0.1 CPU, 512 MB, sleeps after 15 min idle).
-# Python version comes from .python-version (3.11). Secrets are entered in the Render dashboard, never here.
+# Python version comes from .python-version (3.11). The key is entered in the Render dashboard, never here.
 services:
   - type: web
     name: forgeguard-backend
@@ -11,15 +11,21 @@ services:
     envVars:
       - key: LLM_PROVIDER
         value: mock
+      - key: LLM_BASE_URL
+        value: https://developer.amd.com.cn/radeon/api/v1
+      - key: LLM_MODEL
+        value: DeepSeek-V4-Flash
+      - key: LLM_FALLBACK_MODEL
+        value: MiMo-V2.6-Flash
+      - key: LLM_HARDWARE_LABEL
+        value: AMD GPUs - AMD Token Factory (Radeon Cloud)
       - key: LLM_TIMEOUT_S
         value: "60"
+      - key: LLM_MAX_CASES
+        value: "5"
+      - key: LLM_API_KEY
+        sync: false
       - key: FRONTEND_ORIGINS
         sync: false
       - key: FRONTEND_ORIGIN_REGEX
-        sync: false
-      - key: AMD_TOKEN_FACTORY_API_KEY
-        sync: false
-      - key: AMD_TOKEN_FACTORY_BASE_URL
-        sync: false
-      - key: AMD_TOKEN_FACTORY_MODEL
         sync: false
