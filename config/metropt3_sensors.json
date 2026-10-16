@@ -1,0 +1,55 @@
+{
+  "dataset": "metropt3",
+  "machine_id": "APU-01",
+  "units_note": "No generic warning thresholds included; use a validated state-aware anomaly detector. The label column is evaluation-only.",
+  "sensors": {
+    "tp2_bar": {
+      "unit": "bar",
+      "kind": "analog"
+    },
+    "tp3_bar": {
+      "unit": "bar",
+      "kind": "analog"
+    },
+    "h1_bar": {
+      "unit": "bar",
+      "kind": "analog"
+    },
+    "dv_pressure_bar": {
+      "unit": "bar",
+      "kind": "analog"
+    },
+    "reservoirs_bar": {
+      "unit": "bar",
+      "kind": "analog"
+    },
+    "oil_temperature_c": {
+      "unit": "degC",
+      "kind": "analog"
+    },
+    "motor_current_a": {
+      "unit": "A",
+      "kind": "analog"
+    },
+    "motor_current_max_a": {
+      "unit": "A",
+      "kind": "derived"
+    },
+    "compressor_loading_pct": {
+      "unit": "percent",
+      "kind": "derived"
+    },
+    "compressor_loading_1h_pct": {
+      "unit": "percent",
+      "kind": "derived"
+    },
+    "low_pressure_alarm_pct": {
+      "unit": "percent",
+      "kind": "derived"
+    },
+    "raw_rows": {
+      "unit": "rows",
+      "kind": "quality"
+    }
+  }
+}

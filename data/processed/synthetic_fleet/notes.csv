@@ -1,0 +1,21 @@
+note_id,machine_id,timestamp,text,source,synthetic
+N-1,FP-01,2026-10-14T08:30:00,Start-of-week inspection on FP-01: no issues found.,inspection,true
+N-2,FP-02,2026-10-14T09:00:00,Start-of-week inspection on FP-02: no issues found.,inspection,true
+N-3,HP-01,2026-10-14T09:30:00,Start-of-week inspection on HP-01: no issues found.,inspection,true
+N-4,HP-02,2026-10-14T10:00:00,Intake filter on HP-02 cleaned.,maintenance,true
+N-5,DS-01,2026-10-14T10:30:00,"Coupling bolts on DS-01 checked, all tight.",inspection,true
+N-6,DS-02,2026-10-14T11:00:00,Start-of-week inspection on DS-02: no issues found.,inspection,true
+N-7,FP-01,2026-10-14T15:00:00,Die changed on FP-01 for a new part batch.,maintenance,true
+N-8,FP-02,2026-10-14T18:00:00,Lube oil filter on FP-02 due for replacement; scheduled for 16 Oct.,maintenance,true
+N-9,DS-02,2026-10-15T02:50:00,DS-02 sensor gateway restarted; readings may be missing for about one hour.,error_log,true
+N-10,DS-01,2026-10-15T10:10:00,Hammer impact work on the frame next to DS-01 between 10:10 and 10:20.,inspection,true
+N-11,FP-02,2026-10-15T14:20:00,FP-02 high temperature alarm acknowledged by operator.,error_log,true
+N-12,FP-02,2026-10-15T16:30:00,FP-02 lube oil level topped up; oil looked dark.,maintenance,true
+N-13,HP-01,2026-10-15T16:45:00,"Slight bearing noise reported on HP-01, bearing greased.",maintenance,true
+N-14,DS-02,2026-10-15T20:10:00,DS-02 rpm sensor cable found loose and re-seated.,maintenance,true
+N-15,FP-01,2026-10-16T07:00:00,Routine check on FP-01: all readings normal.,inspection,true
+N-16,HP-01,2026-10-16T07:30:00,Operator reports HP-01 sounds louder than usual.,inspection,true
+N-17,FP-02,2026-10-16T09:00:00,Lube oil filter on FP-02 replaced.,maintenance,true
+N-18,HP-02,2026-10-16T10:30:00,Relief valve on HP-02 adjusted after service.,maintenance,true
+N-19,HP-02,2026-10-16T11:10:00,HP-02 high pressure alarm.,error_log,true
+N-20,DS-01,2026-10-16T14:00:00,Routine check on DS-01: no issues found.,inspection,true

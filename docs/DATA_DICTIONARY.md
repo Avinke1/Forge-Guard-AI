@@ -1,4 +1,4 @@
-﻿# ForgeGuard AI — Data Dictionary
+# ForgeGuard AI — Data Dictionary
 
 ## 1. AI4I processed readings
 
@@ -40,45 +40,92 @@
 
 The failure-mode indicators are separate flags. They must not be assumed to be mutually exclusive.
 
-## 3. MetroPT-3 notes
+## 3. MetroPT-3 processed readings
 
-*File:* data/processed/metropt3/notes.csv
+*Files:* `data/processed/metropt3/readings_full_5min.csv` (50,782 windows),
+`data/processed/metropt3/readings.csv` (1,898 demonstration windows).
 
-| Column | Description |
+Both contain a timestamp for the start of a five-minute bin, the constant real-equipment
+identifier `APU-01` (assigned in this project), seven analog averages, five derived/quality fields,
+and a source-reported event-window evaluation label.
+
+| Column | Unit / meaning |
 |---|---|
-| note_id | Identifier for a source note. |
-| timestamp_start | Start timestamp recorded for the note. |
-| timestamp_end | End timestamp recorded for the note; may be empty. |
-| note_type | Note classification, such as failure_report or maintenance_record. |
-| component | Component associated with the note. |
-| note_text | Text describing the reported event or maintenance information. |
-| source | Source attribution recorded in the notes dataset. |
-| source_url | URL recorded for the source. |
+| timestamp | Five-minute window start, ISO 8601; source timestamp aggregated |
+| machine_id | `APU-01`, project ID for the single source compressor |
+| tp2_bar | TP2 compressor pressure mean, bar |
+| tp3_bar | TP3 pneumatic-panel pressure mean, bar |
+| h1_bar | H1 pressure sensor mean, bar |
+| dv_pressure_bar | DV_pressure air-dryer discharge pressure mean, bar |
+| reservoirs_bar | Reservoirs pressure mean, bar |
+| oil_temperature_c | Oil temperature mean, °C |
+| motor_current_a | Motor current mean, A |
+| motor_current_max_a | Maximum source motor current in the window, A |
+| compressor_loading_pct | Percentage of COMP=0 raw samples in window, per team source interpretation |
+| compressor_loading_1h_pct | Past 60-minute rolling mean of available five-minute loading percentages |
+| low_pressure_alarm_pct | Percentage of LPS=1 raw samples in window |
+| raw_rows | Number of original samples contributing to that window |
+| label | 1 if time window overlaps one of four reported air-leak intervals, otherwise 0; EVALUATION ONLY |
 
-## 4. MetroPT-3 fault events
+Cautions: some windows have fewer than 30 samples; missing time windows are dropped, not
+interpolated. `label=0` means not within a *reported* event window, not proven healthy.
+Do not use `label` as a predictive input. Synthetic-fleet thresholds do NOT apply here.
 
-*File:* data/processed/metropt3/fault_events.csv
+## 4. MetroPT-3 source notes
 
-This file uses the same columns as notes.csv, but contains only rows classified as failure_report.
+*File:* `knowledge/metropt3_notes_source.csv` (six original project source summaries).
 
-| Column | Description |
+| Column | Meaning |
 |---|---|
-| note_id | Identifier for the source failure note. |
-| timestamp_start | Start timestamp recorded for the failure report. |
-| timestamp_end | End timestamp recorded for the failure report; may be empty. |
-| note_type | Failure-report classification. |
-| component | Component associated with the report. |
-| note_text | Description of the reported failure. |
-| source | Source attribution recorded in the notes dataset. |
-| source_url | URL recorded for the source. |
+| note_id | Stable source record identifier `MPT3-N001` to `MPT3-N006` |
+| timestamp_start | Reported interval start or point-in-time maintenance time |
+| timestamp_end | Reported interval end; empty for point-in-time maintenance |
+| note_type | `failure_report` or `maintenance_record` |
+| component | Component named in the source record |
+| note_text | Source-derived description; not an original technician narrative |
+| source | Source-document attribution |
+| source_url | Link to the dataset source |
 
-*Important:* These are note-derived event records, not a direct conversion of the raw MetroPT-3 sensor measurements. The raw sensor file remains under team-lead ownership.
+## 5. MetroPT-3 agent notes
 
-## Data interpretation cautions
+*File:* `data/processed/metropt3/notes.csv` (six records).
 
-- Do not present artificial AI4I timestamps or machine IDs as original observations.
-- AI4I is synthetic data, not real-world industrial sensor data.
-- Derived AI4I fields must be distinguished from original source columns.
-- An empty timestamp_end in a note does not establish an event duration.
-- Project-defined alert thresholds are not manufacturer-certified safety limits.
-- Do not infer missing fault details or maintenance outcomes from incomplete notes.
+| Column | Meaning |
+|---|---|
+| note_id | App ID `N-1` through `N-6`; `MPT3-N00x` preserved within the text |
+| machine_id | `APU-01` |
+| timestamp | ISO 8601: failure-window END for failure reports, point time for maintenance |
+| text | Source-derived description with original event period, source record ID and source URL |
+| source | Enum `maintenance` required by agent contract; not a claim of a verbatim technician log |
+| synthetic | `false`: records are derived from cited source information, not invented events |
+
+## 6. MetroPT-3 fault events
+
+*File:* `data/processed/metropt3/fault_events.csv` (four records).
+
+| Column | Meaning |
+|---|---|
+| event_id | F1, F2, F3, F4 in chronological order |
+| machine_id | `APU-01` |
+| failure | Reported failure type `Air leak` |
+| severity | Reported high-stress context (`High stress`) |
+| start | ISO 8601 interval start |
+| end | ISO 8601 interval end |
+| maintenance_report_as_written | Team source-table maintenance annotation; F2 April-vs-May inconsistency marked TO CHECK |
+
+These are reported *intervals*, not individually verified fault-positive sensor readings.
+Do not infer unreported fault types, exact repair details, or preventative intervention outcomes.
+
+## 7. Sensor configuration provenance
+
+- `config/sensors.json` is the approved **synthetic-fleet** threshold configuration only.
+- `config/metropt3_sensors.json` lists MetroPT sensor names and units **without invented limits**.
+- The backend must select configuration by dataset. Neither is evidence that a physical
+  industrial shutdown threshold is validated.
+
+## General interpretation cautions
+
+- AI4I is synthetic. Its timestamps and machine IDs are artificially created for ForgeGuard.
+- MetroPT-3 is one real compressor with limited reported air-leak events.
+- The MetroPT notes are summaries of published source records, not verbatim work orders.
+- Preserve source URLs and uncertainty; do not convert missing evidence into a diagnosis.

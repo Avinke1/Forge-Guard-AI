@@ -222,3 +222,10 @@ __marimo__/
 data/raw/
 *.zip
 .env
+
+# ForgeGuard extras (from the backend branch)
+.venv/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
