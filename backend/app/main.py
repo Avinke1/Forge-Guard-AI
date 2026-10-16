@@ -15,7 +15,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.app import reports
 from backend.app.datasets import listed_datasets, load_demo_frames
-from backend.app.pipeline import AnalysisError, analyze
+from backend.app.pipeline import AnalysisError, ai_view, analyze
 from backend.app.schemas import AnalysisResult, DatasetInfo, HealthResponse, InspectionReport, LLMStatus
 from backend.app.settings import get_settings
 from backend.app.store import runs
@@ -119,20 +119,6 @@ def analyze_demo(dataset_id: str) -> AnalysisResult:
         raise ApiError(404, f"Unknown demo dataset '{dataset_id}'. Available: {known}.")
     readings_raw, notes_raw = load_demo_frames(dataset_id)
     return _run(readings_raw, notes_raw, dataset_id, True)
-
-
-def ai_view(result: AnalysisResult) -> AnalysisResult:
-    """The run as the AI sees it: each case keeps only the notes LINKED to its anomalies.
-
-    MachineCase.notes holds every note of the machine (unlinked ones are background for the UI).
-    reports.py treats case.notes as evidence, so unlinked notes must not reach it: they would be sent
-    to the AI as citable evidence and listed in the rule-based fallback summary.
-    """
-    cases = []
-    for case in result.cases:
-        linked = {link.note_id for a in case.anomalies for link in a.linked_notes}
-        cases.append(case.model_copy(update={"notes": [n for n in case.notes if n.note_id in linked]}))
-    return result.model_copy(update={"cases": cases})
 
 
 @api.post("/runs/{run_id}/explain/{machine_id}", response_model=InspectionReport)

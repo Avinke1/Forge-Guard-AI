@@ -6,7 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import llm_client, prompts, reports
-from backend.app.main import ai_view, app
+from backend.app.main import app
+from backend.app.pipeline import ai_view
 from backend.app.settings import REPO_ROOT
 
 SYN_READINGS = REPO_ROOT / "data/processed/synthetic_fleet/readings.csv"
