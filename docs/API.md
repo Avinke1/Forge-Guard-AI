@@ -23,6 +23,8 @@ CORS allows `http://localhost:5173` and the origins in `FRONTEND_ORIGINS` (comma
 | GET | `/api/datasets` | `DatasetInfo[]` | `synthetic_fleet`, `metropt3` |
 | POST | `/api/analyze` | `AnalysisResult` | multipart: `readings` (.csv, required), `notes` (.csv, optional), `dataset_hint` (optional) |
 | POST | `/api/analyze/demo/{dataset_id}` | `AnalysisResult` | `synthetic_fleet` or `metropt3`; about 0.2 s |
+| GET | `/api/runs` | `RunSummary[]` | run history, newest first (in memory: newest 20, lost on restart) |
+| GET | `/api/runs/{run_id}` | `AnalysisResult` | the stored run, exactly as `/api/analyze` returned it; 404 if unknown/expired |
 | POST | `/api/runs/{run_id}/explain/{machine_id}` | `InspectionReport` | on demand, one machine; real AI about 25 s (12-36 s) - client timeout >= 90 s |
 | GET | `/api/llm/status` | `LLMStatus` | real health check (model list, no AI tokens used), cached 30 s |
 
@@ -37,7 +39,7 @@ Every error is HTTP 4xx/5xx with exactly one key:
 | Status | When |
 |---|---|
 | 400 | not .csv, empty, over 10 MB, not readable CSV, missing `timestamp`/`machine_id`, no sensor columns, missing `readings` field, unknown `dataset_hint` |
-| 404 | unknown demo dataset, unknown `run_id` (runs live in memory: newest 20, lost on restart - just run the analysis again), machine not in the run |
+| 404 | unknown demo dataset, unknown `run_id` (`GET /api/runs/{run_id}` and explain) (runs live in memory: newest 20, lost on restart - just run the analysis again), machine not in the run |
 | 500 | `{"error": "Internal server error. Please try again."}` |
 
 Show `error` text to the user as-is; it is written in plain English.
@@ -98,6 +100,29 @@ Show `error` text to the user as-is; it is written in plain English.
 | `Anomaly.linked_notes` | `[{note_id, relation: before/during/after}]` |
 | `MachineCase.context` | data-quality warnings and ignored one-off spikes, with nearby notes. Show on the machine page as context, NOT as evidence. `kind`: `empty_cell`, `unreadable_value`, `sensor_error`, `gap`, `low_raw_rows`, `transient_ignored` |
 | `Provenance.provider` | `amd_token_factory` (real AI on AMD), `mock`, `saved` (stored real AMD report), `gemini` (optional backup, never AMD) |
+
+## Run history (read-only, no database)
+
+`GET /api/runs` - runs kept in memory (newest 20, lost when the server restarts), newest first. Real response:
+
+```json
+[
+  {"run_id": "09947fd71664", "created_at": "2026-10-17T17:53:38", "dataset_id": "metropt3",
+   "dataset_name": "MetroPT-3 air compressor APU-01 (real data)", "real": true, "machines": 1,
+   "counts": {"HIGH": 1, "MEDIUM": 0, "LOW": 0, "OK": 0}},
+  {"run_id": "6c8a313f0440", "created_at": "2026-10-17T17:53:38", "dataset_id": "synthetic_fleet",
+   "dataset_name": "Synthetic factory fleet (6 machines)", "real": false, "machines": 6,
+   "counts": {"HIGH": 2, "MEDIUM": 1, "LOW": 1, "OK": 2}}
+]
+```
+
+- `created_at`: server wall-clock time, ISO 8601 without time zone, whole seconds.
+- `real`: `true` for real plant data (`dataset.synthetic == false`), `false` for SYNTHETIC data.
+- `machines`: number of cases; `counts`: cases per priority (always all four keys).
+- Empty list `[]` after a server restart - not an error.
+
+`GET /api/runs/{run_id}` - the full `AnalysisResult` of that run (same JSON as `/api/analyze`). Unknown or expired:
+`404 {"error": "Run not found. It may have expired - please run the analysis again."}`
 
 ## InspectionReport (explain)
 

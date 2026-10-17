@@ -38,6 +38,11 @@ class RunStore:
         with self._lock:
             return self._runs.get(run_id)
 
+    def newest_first(self) -> list[StoredRun]:
+        """All stored runs, newest first."""
+        with self._lock:
+            return list(reversed(self._runs.values()))
+
     def __len__(self) -> int:
         with self._lock:
             return len(self._runs)
