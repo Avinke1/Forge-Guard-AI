@@ -1,0 +1,95 @@
+{
+  "format": "forgeguard-saved-report-v1",
+  "dataset_id": "synthetic_fleet",
+  "machine_id": "FP-02",
+  "saved_at": "2026-10-17T12:27:40+00:00",
+  "case_signature": [
+    [
+      "A-1",
+      "temperature_c",
+      "2026-10-15T13:00:00",
+      "2026-10-15T14:00:00"
+    ],
+    [
+      "A-2",
+      "temperature_c",
+      "2026-10-15T14:00:00",
+      "2026-10-15T16:00:00"
+    ]
+  ],
+  "report": {
+    "machine_id": "FP-02",
+    "explanation": {
+      "machine_id": "FP-02",
+      "summary": "Temperature on FP-02 rose above normal and exceeded the 90°C limit for several hours, with a peak of 96°Ccars. The high temperature was acknowledged and later addressed by maintenance actions.",
+      "findings": [
+        {
+          "statement": "Temperature rose from 76.0°C to 92.9°C over one hour, which is well above the machine's typical level of about 59.23°C.",
+          "evidence": [
+            "A-1",
+            "R437",
+            "R441"
+          ]
+        },
+        {
+          "statement": "Temperature remained above the 90°C limit for two hours, peaking at 96.0°C.",
+          "evidence": [
+            "A-2",
+            "R445"
+          ]
+        }
+      ],
+      "possible_causes": [
+        {
+          "cause": "Possible lubrication issue, as the lube oil filter was due for replacement and oil was later topped up and looked dark.",
+          "evidence": [
+            "N-8",
+            "N-12"
+          ]
+        },
+        {
+          "cause": "Possible cooling or lubrication system degradation leading to overheating.",
+          "evidence": [
+            "A-1",
+            "A-2"
+          ]
+        }
+      ],
+      "recommended_checks": [
+        {
+          "action": "Inspect the cooling and lubrication system, including oil level and filter condition.",
+          "reason": "High temperature alerts suggest possible cooling/lubrication problems (general guidance).",
+          "evidence": [
+            "A-1",
+            "A-2"
+          ]
+        },
+        {
+          "action": "Verify the temperature sensor readings against a known reference.",
+          "reason": "High temperature alerts could be due to sensor error (general guidance).",
+          "evidence": [
+            "A-1",
+            "A-2"
+          ]
+        }
+      ],
+      "missing_information": [
+        "No vibration or pressure anomaly was reported, but vibration readings show some increase (e.g., 2.63 mm/s at R447) - not flagged as anomaly.",
+        "No information on ambient temperature or load conditions during the event."
+      ],
+      "uncertainty": "The evidence is sufficient to describe the temperature anomaly, but the root cause is not confirmed; maintenance notes suggest lubrication issues but are not proof."
+    },
+    "unsupported": [],
+    "grounding_rate": 1.0,
+    "provenance": {
+      "provider": "amd_token_factory",
+      "model": "self-dploy/DeepSeek-V4-Flash",
+      "hardware_label": "AMD GPUs - AMD Token Factory (Radeon Cloud)",
+      "latency_ms": 21822,
+      "created_at": "2026-10-17T12:27:40+00:00",
+      "cached": false
+    },
+    "error": null,
+    "fallback_summary": null
+  }
+}

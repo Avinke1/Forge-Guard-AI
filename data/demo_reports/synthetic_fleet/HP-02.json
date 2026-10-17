@@ -1,0 +1,93 @@
+{
+  "format": "forgeguard-saved-report-v1",
+  "dataset_id": "synthetic_fleet",
+  "machine_id": "HP-02",
+  "saved_at": "2026-10-17T12:28:12+00:00",
+  "case_signature": [
+    [
+      "A-6",
+      "pressure_bar",
+      "2026-10-16T11:00:00",
+      "2026-10-16T12:00:00"
+    ]
+  ],
+  "report": {
+    "machine_id": "HP-02",
+    "explanation": {
+      "machine_id": "HP-02",
+      "summary": "Pressure exceeded the 225 bar limit for one hour, peaking at 238 bar, with a high-pressure alarm logged during the event.",
+      "findings": [
+        {
+          "statement": "Pressure was above the 225 bar limit for 1 hour (5 readings), with the highest value at 238.0 bar and the lowest at 228.1 bar.",
+          "evidence": [
+            "A-6",
+            "R1103",
+            "R1105"
+          ]
+        }
+      ],
+      "possible_causes": [
+        {
+          "cause": "The relief valve may have been misadjusted after recent service, possibly causing pressure to remain high.",
+          "evidence": [
+            "N-18",
+            "A-6"
+          ]
+        },
+        {
+          "cause": "There could be a blockage or restriction in the pressure line, leading to elevated pressure.",
+          "evidence": [
+            "A-6"
+          ]
+        },
+        {
+          "cause": "The pressure sensor may be reading inaccurately, though this is not confirmed.",
+          "evidence": [
+            "A-6"
+          ]
+        }
+      ],
+      "recommended_checks": [
+        {
+          "action": "Inspect the relief valve setting and operation, as it was recently adjusted.",
+          "reason": "The anomaly occurred shortly after the relief valve adjustment (general guidance).",
+          "evidence": [
+            "N-18",
+            "A-6"
+          ]
+        },
+        {
+          "action": "Check for leaks, blockages, or regulator issues in the pressure system.",
+          "reason": "Pressure exceeded the high limit, which may indicate a system restriction (general guidance).",
+          "evidence": [
+            "A-6"
+          ]
+        },
+        {
+          "action": "Verify the pressure sensor calibration and compare with a manual gauge.",
+          "reason": "To rule out sensor error as a cause of the high reading (general guidance).",
+          "evidence": [
+            "A-6"
+          ]
+        }
+      ],
+      "missing_information": [
+        "No maintenance history beyond the relief valve adjustment note.",
+        "No information on whether the pressure returned to normal after the event."
+      ],
+      "uncertainty": "The cause is not confirmed; the relief valve adjustment is a possible factor but not proven."
+    },
+    "unsupported": [],
+    "grounding_rate": 1.0,
+    "provenance": {
+      "provider": "amd_token_factory",
+      "model": "self-dploy/DeepSeek-V4-Flash",
+      "hardware_label": "AMD GPUs - AMD Token Factory (Radeon Cloud)",
+      "latency_ms": 26778,
+      "created_at": "2026-10-17T12:28:12+00:00",
+      "cached": false
+    },
+    "error": null,
+    "fallback_summary": null
+  }
+}
