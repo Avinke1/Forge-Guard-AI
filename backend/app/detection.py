@@ -197,12 +197,15 @@ def _zscore_runs(g: pd.DataFrame, spec: SensorSpec, ds: DatasetConfig, breaks: n
                 continue
             seg = g.iloc[a : b + 1]
             seg_z = z.iloc[a : b + 1]
+            # z and baseline at the reading with the largest |z| (severity uses |z|), but the peak shown to
+            # people is the window's REAL extreme: highest value for a rise, lowest for a drop.
             at = int(np.nanargmax(seg_z.abs().to_numpy()))
-            peak = float(seg[spec.name].iloc[at])
             z_peak = float(seg_z.iloc[at])
             base = float(mean.iloc[a + at])
+            seg_values = seg[spec.name]
+            peak = float(seg_values.max() if direction == "high" else seg_values.min())
             start, end = seg["timestamp"].iloc[0], seg["timestamp"].iloc[-1]
-            verb = "rose to" if direction == "high" else "fell to"
+            verb = "rose as high as" if direction == "high" else "fell as low as"
             out.anomalies.append(
                 Detected(
                     machine_id=str(seg["machine_id"].iloc[0]),
@@ -220,7 +223,7 @@ def _zscore_runs(g: pd.DataFrame, spec: SensorSpec, ds: DatasetConfig, breaks: n
                     reason=(
                         f"{spec.label} {verb} {fmt_value(peak)} {spec.unit} for {fmt_duration(end - start)} "
                         f"({n} readings); this machine's normal over {_baseline_text(ds)} is about "
-                        f"{fmt_value(base)} {spec.unit} (z = {z_peak:+.1f})."
+                        f"{fmt_value(base)} {spec.unit} (largest z = {z_peak:+.1f})."
                     ),
                 )
             )

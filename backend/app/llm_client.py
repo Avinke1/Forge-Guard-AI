@@ -598,6 +598,16 @@ class LLMClient:
         st["reachable"] = True
         if st["last_latency_ms"] is None:
             st["last_latency_ms"] = ms
+        if self.provider == "amd_token_factory":
+            # GET /v1/models can answer even with a wrong key, so check the key with GET /v1/usage
+            # (no tokens used). A wrong key must never show as "AMD ready" in the UI.
+            try:
+                self.usage()
+            except LLMError as exc:
+                if exc.kind in ("auth", "not_verified"):
+                    st["reachable"] = False
+                    st["error"] = exc.message
+                    return st
         if models and self.config.model.lower() not in {m.lower() for m in models}:
             st["error"] = (f"Model '{self.config.model}' is not in the {self._service} model list "
                            "(GET /v1/models). Choose another LLM_MODEL.")

@@ -66,7 +66,7 @@ SYSTEM_PROMPT = """You are ForgeGuard AI, a maintenance decision-support assista
 A rule-based program has ALREADY found the unusual sensor readings. Your job is only to EXPLAIN that evidence in plain English. You do not detect anything yourself and you do not decide anything: a technician decides.
 
 RULES
-1. Use ONLY the evidence in CASE_JSON. Never invent readings, values, dates, maintenance history, part names or root causes.
+1. Use ONLY the evidence in CASE_JSON. Never invent readings, values, dates, maintenance history, part names or root causes. Every number you write (values, peaks, limits, times, durations) must be copied from CASE_JSON - never calculate new minimums, maximums or averages. For the lowest / highest value of an anomaly use its lowest_value / highest_value. Call a reading unusual only if it is part of an anomaly; other readings are normal context.
 2. Every finding, possible cause and recommended check must cite at least one evidence ID copied exactly from CASE_JSON: anomaly IDs (like A-1), reading row IDs (like R412) or note IDs (like N-13). Use only IDs listed in "evidence_ids".
 3. Causes are possibilities, not facts: write "possible", "may" or "could". Never say that a part has failed or will fail.
 4. Never use the words "predict", "prediction", "predictive", "guaranteed" or "autonomous".
@@ -75,6 +75,7 @@ RULES
 7. Recommend only human inspection checks. Never order a shutdown, lockout or dangerous hands-on work; say "follow the site procedure" where safety matters.
 8. If the evidence is not enough to say something, write "insufficient evidence" and add what is missing to missing_information.
 9. Keep it short and plain: summary 1-2 sentences; at most 4 findings, 3 possible causes and 4 recommended checks. Use the units given in CASE_JSON.
+10. When there are anomalies, always give 2-4 recommended_checks and write uncertainty as one sentence - never leave them empty.
 
 OUTPUT
 Return ONLY one JSON object - no markdown, no text before or after it - with exactly these keys:
@@ -403,10 +404,15 @@ def build_case_payload(case: Any, readings: Any = None, sensors: Any = None,
                            key=lambda a: (-(a.get("severity") or 0), str(a.get("start"))))
     shown = all_anomalies[:MAX_ANOMALIES]
 
+    rows = machine_rows(readings, machine_id) if machine_id else []
+    rows_by_id = {str(r.get("row_id")): r for r in rows if r.get("row_id") is not None}
+
     anomalies_out = []
     for a in shown:
         info = _sensor_info(sensors, a.get("sensor") or "")
         row_ids = [str(r) for r in a.get("row_ids") or []]
+        window_values = [v for v in (_num(rows_by_id[r].get(a.get("sensor"))) for r in row_ids if r in rows_by_id)
+                         if isinstance(v, (int, float)) and not isinstance(v, bool)]
         item = {
             "anomaly_id": a.get("anomaly_id"),
             "sensor": a.get("sensor"),
@@ -422,13 +428,15 @@ def build_case_payload(case: Any, readings: Any = None, sensors: Any = None,
             "first_row": row_ids[0] if row_ids else None,
             "last_row": row_ids[-1] if row_ids else None,
         }
+        if window_values:                      # true extremes of this anomaly window (from the readings)
+            item["lowest_value"] = min(window_values)
+            item["highest_value"] = max(window_values)
         if info["warn_high"] is not None:
             item["limit_high"] = info["warn_high"]
         if info["warn_low"] is not None:
             item["limit_low"] = info["warn_low"]
         anomalies_out.append(item)
 
-    rows = machine_rows(readings, machine_id) if machine_id else []
     key_readings = select_key_readings(shown, rows, sensors)
 
     notes_sorted = sorted(case.get("notes") or [], key=lambda n: str(ts_text(n.get("timestamp"))))
