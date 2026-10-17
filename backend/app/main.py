@@ -16,9 +16,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from backend.app import reports
 from backend.app.datasets import listed_datasets, load_demo_frames
 from backend.app.pipeline import AnalysisError, ai_view, analyze
-from backend.app.schemas import AnalysisResult, DatasetInfo, HealthResponse, InspectionReport, LLMStatus
+from backend.app.schemas import (AnalysisResult, DatasetInfo, HealthResponse, InspectionReport, LLMStatus,
+                                 PriorityCounts, RunSummary)
 from backend.app.settings import get_settings
-from backend.app.store import runs
+from backend.app.store import StoredRun, runs
 from backend.app.validation import UploadError, check_upload, read_csv_bytes, resolve_dataset
 
 log = logging.getLogger("forgeguard")
@@ -121,12 +122,38 @@ def analyze_demo(dataset_id: str) -> AnalysisResult:
     return _run(readings_raw, notes_raw, dataset_id, True)
 
 
-@api.post("/runs/{run_id}/explain/{machine_id}", response_model=InspectionReport)
-def explain_machine(run_id: str, machine_id: str) -> InspectionReport:
-    """Normal def (not async): the AI call can take about 25 s; FastAPI runs it in a worker thread."""
+def _summary(run: StoredRun) -> RunSummary:
+    result = run.result
+    counts = PriorityCounts()
+    for c in result.cases:
+        setattr(counts, c.priority, getattr(counts, c.priority) + 1)
+    return RunSummary(run_id=result.run_id, created_at=run.created_at.replace(microsecond=0),
+                      dataset_id=result.dataset.id, dataset_name=result.dataset.name,
+                      real=not result.dataset.synthetic, machines=len(result.cases), counts=counts)
+
+
+@api.get("/runs", response_model=list[RunSummary])
+def list_runs() -> list[RunSummary]:
+    """Read-only: runs kept in memory (newest 20, lost on restart), newest first."""
+    return [_summary(run) for run in runs.newest_first()]
+
+
+def _stored_run(run_id: str) -> StoredRun:
     run = runs.get(run_id)
     if run is None:
         raise ApiError(404, "Run not found. It may have expired - please run the analysis again.")
+    return run
+
+
+@api.get("/runs/{run_id}", response_model=AnalysisResult)
+def get_run(run_id: str) -> AnalysisResult:
+    return _stored_run(run_id).result
+
+
+@api.post("/runs/{run_id}/explain/{machine_id}", response_model=InspectionReport)
+def explain_machine(run_id: str, machine_id: str) -> InspectionReport:
+    """Normal def (not async): the AI call can take about 25 s; FastAPI runs it in a worker thread."""
+    run = _stored_run(run_id)
     try:
         report = reports.explain_machine(ai_view(run.result), machine_id)
     except KeyError:

@@ -210,3 +210,39 @@ def test_label_and_answer_key_not_in_prompt(client, syn, met):
 def test_no_secrets_or_urls_in_responses(client, syn):
     s = client.get("/api/llm/status").text + client.get("/api/health").text
     assert "http" not in s.lower() and "key" not in s.lower()
+
+
+# ---------------------------------------------------------------- run history (read-only, in memory)
+
+
+def test_runs_list_newest_first(client, syn, met):
+    newest = client.post("/api/analyze/demo/synthetic_fleet").json()
+    rows = client.get("/api/runs").json()
+    assert rows[0]["run_id"] == newest["run_id"] and len(rows) <= 20
+    assert [r["created_at"] for r in rows] == sorted((r["created_at"] for r in rows), reverse=True)
+    by_id = {r["run_id"]: r for r in rows}
+    for body, real in ((syn, False), (met, True)):
+        row = by_id[body["run_id"]]
+        assert set(row) == {"run_id", "created_at", "dataset_id", "dataset_name", "real", "machines", "counts"}
+        assert row["dataset_id"] == body["dataset"]["id"] and row["dataset_name"] == body["dataset"]["name"]
+        assert row["real"] is real and row["machines"] == len(body["cases"])
+        expected = {p: sum(c["priority"] == p for c in body["cases"]) for p in ("HIGH", "MEDIUM", "LOW", "OK")}
+        assert row["counts"] == expected
+        assert "T" in row["created_at"] and "+" not in row["created_at"] and not row["created_at"].endswith("Z")
+
+
+def test_get_run(client, syn):
+    assert client.get(f"/api/runs/{syn['run_id']}").json() == syn
+    assert "Run not found" in _error(client.get("/api/runs/does-not-exist"), 404)
+
+
+def test_run_store_keeps_newest_only():
+    from types import SimpleNamespace
+
+    from backend.app.store import RunStore
+
+    store = RunStore(3)
+    for i in range(5):
+        store.put(SimpleNamespace(run_id=f"r{i}"), is_demo=True)
+    assert [r.result.run_id for r in store.newest_first()] == ["r4", "r3", "r2"]
+    assert store.get("r0") is None and len(store) == 3

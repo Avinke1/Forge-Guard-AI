@@ -184,3 +184,11 @@ def test_unknown_machine_raises_keyerror(view):
 def test_mock_client_is_default_in_tests():
     llm_client.set_client(None)
     assert llm_client.get_client().provider == "mock"
+
+
+def test_empty_findings_trigger_one_repair(view):
+    empty = json.loads(good_reply("HP-01", ["A-5"]))
+    empty["findings"] = []
+    fake = FakeAMD([json.dumps(empty), good_reply("HP-01", ["A-5"])])
+    rep = reports.explain_machine(view, "HP-01", client=amd_client(fake))
+    assert fake.posts == 2 and rep["explanation"]["findings"]

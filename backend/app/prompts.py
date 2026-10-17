@@ -75,7 +75,7 @@ RULES
 7. Recommend only human inspection checks. Never order a shutdown, lockout or dangerous hands-on work; say "follow the site procedure" where safety matters.
 8. If the evidence is not enough to say something, write "insufficient evidence" and add what is missing to missing_information.
 9. Keep it short and plain: summary 1-2 sentences; at most 4 findings, 3 possible causes and 4 recommended checks. Use the units given in CASE_JSON.
-10. When there are anomalies, always give 2-4 recommended_checks and write uncertainty as one sentence - never leave them empty.
+10. When there are anomalies, always give 1-4 findings (one per anomaly, describing ONLY that anomaly's sensor), 2-4 recommended_checks and one uncertainty sentence - never leave them empty. Do not describe a sensor as rising, increased or abnormal unless it has an anomaly.
 
 OUTPUT
 Return ONLY one JSON object - no markdown, no text before or after it - with exactly these keys:

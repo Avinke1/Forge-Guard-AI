@@ -147,6 +147,23 @@ class AnalysisResult(BaseModel):
     cases: list[MachineCase]
 
 
+class PriorityCounts(BaseModel):
+    HIGH: int = 0
+    MEDIUM: int = 0
+    LOW: int = 0
+    OK: int = 0
+
+
+class RunSummary(BaseModel):  # GET /api/runs - one row per stored run (in memory, newest 20)
+    run_id: str
+    created_at: datetime
+    dataset_id: str
+    dataset_name: str
+    real: bool  # real plant data (not dataset.synthetic)
+    machines: int
+    counts: PriorityCounts
+
+
 # ---------------------------------------------------------------- steps 5-6: explain, verify (Member 2)
 
 

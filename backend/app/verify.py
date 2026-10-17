@@ -144,6 +144,8 @@ def parse_explanation(text: str | None, machine_id: str) -> tuple[dict | None, s
 
     if not explanation["summary"]:
         return None, "the summary is empty"
+    if not explanation["findings"]:          # explain is only called for machines WITH anomalies
+        return None, "findings is empty - give 1-4 findings, each citing the anomaly IDs it describes"
     return explanation, None
 
 
