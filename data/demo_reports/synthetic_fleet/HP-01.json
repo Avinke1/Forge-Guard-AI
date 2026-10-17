@@ -1,0 +1,120 @@
+{
+  "format": "forgeguard-saved-report-v1",
+  "dataset_id": "synthetic_fleet",
+  "machine_id": "HP-01",
+  "saved_at": "2026-10-17T12:27:13+00:00",
+  "case_signature": [
+    [
+      "A-3",
+      "vibration_mm_s",
+      "2026-10-16T04:00:00",
+      "2026-10-16T04:30:00"
+    ],
+    [
+      "A-4",
+      "sound_db",
+      "2026-10-16T08:00:00",
+      "2026-10-16T23:45:00"
+    ],
+    [
+      "A-5",
+      "vibration_mm_s",
+      "2026-10-16T08:00:00",
+      "2026-10-16T23:45:00"
+    ]
+  ],
+  "report": {
+    "machine_id": "HP-01",
+    "explanation": {
+      "machine_id": "HP-01",
+      "summary": "Vibration and sound level exceeded limits for most of the day, with an earlier short vibration spike. A prior bearing noise note and operator report of louder sound suggest a possible bearing-related issue.",
+      "findings": [
+        {
+          "statement": "Vibration exceeded the 6.5 mm/s limit, peaking at 8.0 mm/s, for 15 h 45 min from 08:00 to 23:45.",
+          "evidence": [
+            "A-5",
+            "R860"
+          ]
+        },
+        {
+          "statement": "Sound level exceeded the 85 dB limit, peaking at 90 dB, for the same period.",
+          "evidence": [
+            "A-4",
+            "R846"
+          ]
+        },
+        {
+          "statement": "A brief vibration spike to 3.87 mm/s occurred earlier from 04:00 to 04:30, above the machine's normal level.",
+          "evidence": [
+            "A-3",
+            "R787"
+          ]
+        }
+      ],
+      "possible_causes": [
+        {
+          "cause": "Bearing wear or damage, as suggested by the prior bearing noise note and the sustained high vibration and sound.",
+          "evidence": [
+            "N-13",
+            "A-5",
+            "A-4"
+          ]
+        },
+        {
+          "cause": "Loose or worn components, which could cause both high vibration and increased sound.",
+          "evidence": [
+            "A-5",
+            "A-4"
+          ]
+        },
+        {
+          "cause": "Misalignment or mounting issues, which can elevate vibration levels.",
+          "evidence": [
+            "A-5"
+          ]
+        }
+      ],
+      "recommended_checks": [
+        {
+          "action": "Inspect bearings, mounting, alignment, and rotating parts; confirm with repeat vibration readings.",
+          "reason": "High vibration may indicate bearing or alignment issues (general guidance).",
+          "evidence": [
+            "A-5"
+          ]
+        },
+        {
+          "action": "Check for abnormal noise and loose/worn components; use hearing protection and follow site procedure.",
+          "reason": "High sound level may indicate loose or worn parts (general guidance).",
+          "evidence": [
+            "A-4"
+          ]
+        },
+        {
+          "action": "Review the bearing noise report and operator's louder-than-usual observation, and consider a detailed bearing inspection.",
+          "reason": "These notes precede the anomalies and may point to a developing bearing problem.",
+          "evidence": [
+            "N-13",
+            "N-16"
+          ]
+        }
+      ],
+      "missing_information": [
+        "Maintenance history beyond the bearing greasing note is not provided.",
+        "No recent inspection or repair records are available."
+      ],
+      "uncertainty": "The anomalies are clear, but the root cause is not confirmed; the bearing noise note and operator report are supporting context, not proof."
+    },
+    "unsupported": [],
+    "grounding_rate": 1.0,
+    "provenance": {
+      "provider": "amd_token_factory",
+      "model": "self-dploy/DeepSeek-V4-Flash",
+      "hardware_label": "AMD GPUs - AMD Token Factory (Radeon Cloud)",
+      "latency_ms": 41541,
+      "created_at": "2026-10-17T12:27:13+00:00",
+      "cached": false
+    },
+    "error": null,
+    "fallback_summary": null
+  }
+}
