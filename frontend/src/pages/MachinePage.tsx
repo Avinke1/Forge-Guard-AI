@@ -27,6 +27,7 @@ import {
 import { PriorityBadge } from '../components/PriorityBadge';
 import { SensorChart } from '../components/SensorChart';
 import { EvidenceDrawer } from '../components/EvidenceDrawer';
+import { InspectionEvidence } from '../components/InspectionEvidence';
 
 export const MachinePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -530,6 +531,9 @@ export const MachinePage: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* Inspection evidence: technician photos / PDFs - browser only, never uploaded or sent to the AI */}
+      <InspectionEvidence key={machine.id} />
 
       {/* Data Warnings (if any) */}
       {machine.warnings.length > 0 && (
