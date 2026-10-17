@@ -141,3 +141,17 @@ def test_metropt_low_raw_rows_windows_skipped(metropt_run):
     assert len(skipped) == 6
     for a in metropt_run.detection.anomalies:
         assert not skipped & set(a.row_ids)
+
+
+def test_zscore_peak_is_the_windows_real_extreme(metropt_run, synthetic_run):
+    for bundle in (metropt_run, synthetic_run):
+        values = {r.row_id: r.model_dump() for r in bundle.result.readings}
+        for c in bundle.result.cases:
+            for a in c.anomalies:
+                if a.method != "zscore":
+                    continue
+                window = [values[rid][a.sensor] for rid in a.row_ids if values[rid][a.sensor] is not None]
+                assert a.peak == (min(window) if "fell" in a.reason else max(window))
+    apu = {a.sensor: a for a in case(metropt_run.result, "APU-01").anomalies}
+    assert "fell as low as 6.28 bar" in apu["reservoirs_bar"].reason
+    assert "rose as high as 100 %" in apu["low_pressure_alarm_pct"].reason
