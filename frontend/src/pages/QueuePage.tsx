@@ -10,6 +10,8 @@ import {
   Clock,
   Gauge,
   CheckCircle2,
+  Search,
+  X,
 } from 'lucide-react';
 import { Machine, PriorityLevel } from '../types';
 import { getMachines, getCurrentRun } from '../api';
@@ -19,6 +21,7 @@ export const QueuePage: React.FC = () => {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | PriorityLevel>('All');
+  const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const run = getCurrentRun();
 
@@ -42,10 +45,19 @@ export const QueuePage: React.FC = () => {
     };
   }, []);
 
-  const filteredMachines = machines.filter((m) => {
-    if (filter === 'All') return true;
-    return m.priority === filter;
-  });
+  // Search as you type: machine ID, priority or sensor (key or label). Combined with the priority tabs.
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (m: Machine) => {
+    if (!q) return true;
+    const sensorWords = [
+      ...(m.sensorsInvolved || []),
+      ...m.anomalies.flatMap((a) => [a.sensor, a.sensorLabel]),
+    ];
+    return [m.id, m.priority, ...sensorWords].some((w) => String(w || '').toLowerCase().includes(q));
+  };
+  const filteredMachines = machines.filter(
+    (m) => (filter === 'All' || m.priority === filter) && matchesQuery(m)
+  );
 
   // Calculate metrics
   const totalCount = machines.length;
@@ -145,6 +157,33 @@ export const QueuePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="relative max-w-md">
+        <label htmlFor="queue-search" className="sr-only">
+          Search machines by ID, priority or sensor
+        </label>
+        <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          id="queue-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search machine ID, priority or sensor (e.g. HP-01, HIGH, vibration)"
+          autoComplete="off"
+          className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 pb-3">
         <div className="flex items-center gap-1 text-zinc-400 font-mono text-xs mr-2">
@@ -212,7 +251,7 @@ export const QueuePage: React.FC = () => {
             ) : filteredMachines.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
-                  No machines match the selected filter.
+                  No machines match
                 </td>
               </tr>
             ) : (
@@ -297,7 +336,7 @@ export const QueuePage: React.FC = () => {
           <div className="p-6 text-center text-zinc-500 text-xs">Loading queue...</div>
         ) : filteredMachines.length === 0 ? (
           <div className="p-6 text-center text-zinc-500 text-xs">
-            No machines match the selected filter.
+            No machines match
           </div>
         ) : (
           filteredMachines.map((m) => (
