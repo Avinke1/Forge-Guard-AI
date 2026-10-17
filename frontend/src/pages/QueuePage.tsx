@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
   Layers,
@@ -11,11 +11,14 @@ import {
   Gauge,
   CheckCircle2,
   Search,
+  Mic,
+  Square,
   X,
 } from 'lucide-react';
 import { Machine, PriorityLevel } from '../types';
 import { getMachines, getCurrentRun } from '../api';
 import { PriorityBadge } from '../components/PriorityBadge';
+import { isVoiceSupported, matchSpokenMachine, startVoiceInput } from '../lib/speech';
 
 export const QueuePage: React.FC = () => {
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -24,6 +27,52 @@ export const QueuePage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const run = getCurrentRun();
+  const navigate = useNavigate();
+  const [voiceSupported] = useState(isVoiceSupported);
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const stopVoice = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopVoice.current?.();
+    };
+  }, []);
+
+  const toggleVoice = () => {
+    if (listening) {
+      stopVoice.current?.();
+      stopVoice.current = null;
+      setListening(false);
+      return;
+    }
+
+    setVoiceError(null);
+    try {
+      stopVoice.current = startVoiceInput(
+        (transcript) => {
+          const machine = matchSpokenMachine(
+            transcript,
+            machines.map((m) => m.id)
+          );
+          if (machine) {
+            navigate(`/machines/${encodeURIComponent(machine)}`);
+          } else {
+            setQuery(transcript);
+          }
+        },
+        (message) => setVoiceError(message),
+        () => {
+          setListening(false);
+          stopVoice.current = null;
+        }
+      );
+      setListening(true);
+    } catch {
+      setListening(false);
+      setVoiceError('Unable to start voice recognition.');
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -170,19 +219,40 @@ export const QueuePage: React.FC = () => {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search machine ID, priority or sensor (e.g. HP-01, HIGH, vibration)"
           autoComplete="off"
-          className="w-full pl-9 pr-9 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          className="w-full pl-9 pr-20 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery('')}
             aria-label="Clear search"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+            className="absolute right-10 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={toggleVoice}
+            disabled={loading}
+            aria-label={listening ? 'Stop voice search' : 'Search by voice'}
+            aria-pressed={listening}
+            title={listening ? 'Stop listening' : 'Voice search (Chrome/Edge)'}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+              listening ? 'text-red-400' : 'text-amber-400 hover:text-amber-300'
+            }`}
+          >
+            {listening ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
+        )}
       </div>
+      {!voiceSupported && (
+        <p className="text-xs text-zinc-400">Voice works in Chrome/Edge</p>
+      )}
+      {voiceError && (
+        <p role="alert" className="text-xs text-red-400">{voiceError}</p>
+      )}
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 pb-3">
