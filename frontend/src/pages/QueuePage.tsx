@@ -18,6 +18,7 @@ import {
 import { Machine, PriorityLevel } from '../types';
 import { getMachines, getCurrentRun } from '../api';
 import { PriorityBadge } from '../components/PriorityBadge';
+import { ImpactPanel } from '../components/ImpactPanel';
 import { isVoiceSupported, matchSpokenMachine, startVoiceInput } from '../lib/speech';
 
 export const QueuePage: React.FC = () => {
@@ -205,6 +206,9 @@ export const QueuePage: React.FC = () => {
           <div className="text-[11px] font-mono text-emerald-300/80 mt-1">Within standard limits</div>
         </div>
       </div>
+
+      {/* What ForgeGuard did (values from the same machines as the queue) */}
+      <ImpactPanel machines={machines} loading={loading} />
 
       {/* Search */}
       <div className="relative max-w-md">

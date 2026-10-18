@@ -90,6 +90,7 @@ export const UploadPage: React.FC = () => {
     try {
       const result = await runDemo(id);
       setValidationReport(result.validation);
+      navigate('/queue'); // like the Overview page: a finished demo opens the inspection queue
     } catch (err: any) {
       setErrorMessage(err?.message || 'The demo could not be started.');
     } finally {
